@@ -4,37 +4,50 @@ __version__ = "1.0"
 __maintainer__ = "Sylvestor George"
 __email__ = "sylvestor.george88@gmail.com"
 """
-# System/Library Imports
-import os
 from flask import Flask
 from flask import jsonify, make_response
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flasgger import Swagger
 
-# Custom Imports
 from handlers.events import events
 from handlers.engineers import engineers
 
-app = Flask(__name__)
-CORS(app)
+# Initializing Flask application
+application = Flask(__name__)
+application.debug = True
+application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-db = SQLAlchemy(app)
+# Cross Origin
+CORS(application)
+
+# Flask Swagger
+swagger = Swagger(application)
 
 
-@app.route('/', methods=['GET'])
+@application.route('/', methods=['GET'])
 def index():
     """
     Slack Technical Challenge Services
     """
-    return make_response(jsonify(message='Slack Technical Challenge Services are Running'),
+    return make_response(jsonify(message='Slack Technical Challenge!'),
                          200)
 
 
-app.register_blueprint(events, url_prefix='/events')
-app.register_blueprint(engineers, url_prefix='/engineers')
+# Registers Flask Blueprints
+application.register_blueprint(events, url_prefix='/events')
+application.register_blueprint(engineers, url_prefix='/engineers')
+
+application.config['SWAGGER'] = {
+    'title': 'DILS Flasgger RESTful',
+    'uiversion': 3,
+    'swagger_version': '2.0',
+
+    'headers': [
+        ('Access-Control-Allow-Origin', '*'),
+        ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+        ('Access-Control-Allow-Credentials', 'true'),
+    ]
+}
 
 if __name__ == '__main__':
-    app.debug = True
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.run(host='0.0.0.0', port=8888)
+    application.run(host='0.0.0.0', port=8888)
